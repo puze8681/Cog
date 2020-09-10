@@ -28,7 +28,6 @@ public class MyPhoneStateListener extends PhoneStateListener {
     }
 
     @Override
-
     public void onServiceStateChanged(ServiceState serviceState) {
         switch (serviceState.getState()) {
             case ServiceState.STATE_IN_SERVICE:

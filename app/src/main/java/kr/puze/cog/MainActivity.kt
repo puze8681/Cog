@@ -2,10 +2,13 @@ package kr.puze.cog
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.content.ContentResolver
 import android.content.Context
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -17,9 +20,13 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.google.firebase.database.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kr.puze.cog.Data.CogData
 import kr.puze.cog.Data.PhoneData
+import www.okit.co.Utils.DialogUtil
+import www.okit.co.Utils.PrefUtil
+import www.okit.co.Utils.ToastUtil
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -29,25 +36,27 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        progress = ProgressDialog(this@MainActivity)
+        prefUtil = PrefUtil(this@MainActivity)
+        dialogUtil = DialogUtil(this@MainActivity)
+        toastUtil = ToastUtil(this@MainActivity)
 
         getFirebaseData()
-
         button_contact.setOnClickListener {
+            progress()
             val phoneDataList: ArrayList<PhoneData> = getContacts(this@MainActivity)
             Log.d("LOGTAG/CONTACTS", "$phoneDataList")
             addContact(phoneDataList)
         }
-
         button_cog.setOnClickListener {
             if(isNumber && (edit_money.text.trim().isNotEmpty())){
-                addCog(spinner_phone.selectedItem.toString(), edit_money.text.toString().toInt())
+                addCog(spinner_phone.selectedItemPosition, edit_money.text.toString().toInt())
             }
         }
     }
 
     private fun getFirebaseData(){
-        val phoneDataList = ArrayList<PhoneData>()
-        getSpinner(phoneDataList)
+        getSpinner()
         getRecyclerData()
     }
 
@@ -57,8 +66,20 @@ class MainActivity : AppCompatActivity() {
             if(phoneNum.startsWith("+82")){
                 phoneNum = phoneNum.replace("+82", "0")
             }
+            prefUtil.phone = phoneNum
+            val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+            val reference: DatabaseReference = database.getReference("Address")
+            reference.child(phoneNum).setValue(contactList).addOnCompleteListener {
+                if(it.isSuccessful){
+                    toastUtil.short("전화번호부 업데이트 성공.")
+                }else{
+                    toastUtil.short("전화번호부 업데이트 실패.")
+                }
+                dismiss()
+            }
         }else{
-            Toast.makeText(this@MainActivity, "해당 기기의 전화번호를 알지 못하면 전화번호부를 등록할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            dismiss()
+            toastUtil.short("해당 기기의 전화번호를 알지 못하면 전화번호부를 등록할 수 없습니다.")
         }
     }
 
@@ -69,10 +90,19 @@ class MainActivity : AppCompatActivity() {
         } else phoneMgr.line1Number
     }
 
-
-    private fun addCog(phone: String, money: Int){
+    private fun addCog(index: Int, money: Int){
         val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
-        val cogData: CogData = CogData(phone, timeStamp, money, 0, 0)
+        val cogData = CogData(phoneList[index].name, phoneList[index].tel, timeStamp, money, 0, 0)
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val reference: DatabaseReference = database.getReference("Cogs")
+        reference.child(prefUtil.phone).child(phoneList[index].tel).setValue(cogData).addOnCompleteListener {
+            if(it.isSuccessful){
+                toastUtil.short("장부 등록 성공.")
+            }else{
+                toastUtil.short("장부 등록 실패.")
+            }
+            dismiss()
+        }
     }
 
     private fun getContacts(context: Context): ArrayList<PhoneData>{
@@ -103,12 +133,32 @@ class MainActivity : AppCompatActivity() {
         return phoneDataList
     }
 
-    private fun getSpinner(items: ArrayList<PhoneData>){
-        val spinnerList = ArrayList<String>()
-        for (item in items){
-            item.tel?.let { spinnerList.add(it) }
-        }
-        setSpinner(spinnerList)
+    private fun getSpinner(){
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val reference: DatabaseReference = database.getReference("Address")
+        reference.child(prefUtil.phone).addValueEventListener(object :
+            ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                toastUtil.short("데이터 읽기 실패.")
+                spinnerList.clear()
+                spinnerList.add("010-1234-1234")
+                spinnerList.add("010-1234-1234")
+                spinnerList.add("010-1234-1234")
+                setSpinner(spinnerList)
+            }
+
+            override fun onDataChange(dataSnapShot: DataSnapshot) {
+                spinnerList.clear()
+                phoneList.clear()
+                dataSnapShot.children.forEach{
+                    it.getValue(PhoneData::class.java)?.let { data ->
+                        phoneList.add(PhoneData(data.id, data.name, data.tel))
+                        data.tel?.let { it -> spinnerList.add(it) }
+                    }
+                    setSpinner(spinnerList)
+                }
+            }
+        })
     }
 
     private fun setSpinner(items: ArrayList<String>){
@@ -126,17 +176,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getRecyclerData(){
-        cogList.clear()
-        cogList.add(CogData("010-9790-8310","2020.01.01",30000,20000,2))
-        cogList.add(CogData("010-9790-8310","2020.01.01",30000,20000,2))
-        cogList.add(CogData("010-9790-8310","2020.01.01",30000,20000,2))
-        cogList.add(CogData("010-9790-8310","2020.01.01",30000,20000,2))
-        cogList.add(CogData("010-9790-8310","2020.01.01",30000,20000,2))
-        setRecyclerView(cogList)
+        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+        val reference: DatabaseReference = database.getReference("Cogs")
+        reference.child(prefUtil.phone).addValueEventListener(object :
+            ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                toastUtil.short("데이터 읽기 실패.")
+                cogList.clear()
+                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
+                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
+                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
+                setRecyclerView(cogList)
+            }
+
+            override fun onDataChange(dataSnapShot: DataSnapshot) {
+                cogList.clear()
+                dataSnapShot.children.forEach{
+                    it.getValue(CogData::class.java)?.let { data ->
+                        cogList.add(CogData(data.name, data.number, data.date, data.money, data.pay, data.count))
+                    }
+                    setRecyclerView(cogList)
+                }
+            }
+        })
     }
 
     private fun setRecyclerView(items: ArrayList<CogData>){
-        cogAdapter = CogRecyclerAdapter(items, this@MainActivity)
+        cogAdapter = CogRecyclerAdapter(items, this@MainActivity, toastUtil, dialogUtil, prefUtil.phone)
         recycler_main.adapter = cogAdapter
         (recycler_main.adapter as CogRecyclerAdapter).notifyDataSetChanged()
     }
@@ -145,5 +211,27 @@ class MainActivity : AppCompatActivity() {
         lateinit var cogAdapter: CogRecyclerAdapter
         val cogList = ArrayList<CogData>()
         var isNumber = false
+        lateinit var progress: ProgressDialog
+        lateinit var prefUtil: PrefUtil
+        lateinit var dialogUtil: DialogUtil
+        lateinit var toastUtil: ToastUtil
+        val spinnerList = ArrayList<String>()
+        val phoneList = ArrayList<PhoneData>()
+    }
+
+    private fun progress() {
+        try {
+            if(!this@MainActivity.isFinishing){
+                progress.setCancelable(false)
+                progress.show()
+                progress.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                progress.setContentView(R.layout.progress_dialog)
+            }
+        }catch (e: ClassCastException){
+        }
+    }
+
+    private fun dismiss() {
+        progress.dismiss()
     }
 }

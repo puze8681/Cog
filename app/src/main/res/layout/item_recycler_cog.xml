@@ -5,29 +5,38 @@
     android:padding="8dp"
     android:orientation="vertical">
     <!--    번호 / 전체 금액 / 납입 금액 / 납부 횟수 / [추가 납입] / [수정]-->
+    <TextView
+        android:id="@+id/text_date_cog"
+        android:textStyle="bold"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:gravity="center"
+        android:text="2020.01.01"
+        android:textColor="#000000"
+        android:textSize="18sp" />
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="56dp">
+        <TextView
+            android:id="@+id/text_name_cog"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:gravity="center"
+            android:text="홍길동"
+            android:textColor="#000000"
+            android:textSize="24sp" />
 
         <TextView
             android:id="@+id/text_number_cog"
             android:textStyle="bold"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:gravity="center"
-            android:text="010-1234-1234"
-            android:textColor="#000000"
-            android:textSize="24sp" />
-
-        <TextView
-            android:id="@+id/text_date_cog"
-            android:textStyle="bold"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:gravity="center"
-            android:text="2020.01.01"
+            android:text="010-1234-1234"
             android:textColor="#000000"
             android:textSize="18sp" />
     </RelativeLayout>

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "104500132820",
+    "firebase_url": "https://project-2414331744164909751.firebaseio.com",
+    "project_id": "project-2414331744164909751",
+    "storage_bucket": "project-2414331744164909751.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104500132820:android:062b131b26901605d2b441",
+        "android_client_info": {
+          "package_name": "kr.puze.cog"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104500132820-hfl3umfebqu50ail6ercbvr21lhqh1t3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kr.puze.cog",
+            "certificate_hash": "fd6e60c11aa8953c934525e3fc6ecd46e6395f13"
+          }
+        },
+        {
+          "client_id": "104500132820-flf3e8b2co73ukocumr7b2roprjns7te.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA6ydTK2RQiTd33TiGRcH72sBdSddh5GsU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104500132820-flf3e8b2co73ukocumr7b2roprjns7te.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

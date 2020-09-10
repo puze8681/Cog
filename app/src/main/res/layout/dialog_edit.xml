@@ -17,22 +17,45 @@
         android:textSize="14sp"
         android:textColor="#000000"
         android:textStyle="bold"
-        android:text="추가 납입"/>
+        android:text="장부 수정"/>
     <EditText
-        android:id="@+id/edit_dialog_pay"
-        android:hint="추가 납입할 금액을 입력해주세요"
+        android:id="@+id/edit_money_dialog_edit"
+        android:hint="수정할 전체 금액을 입력해주세요."
         android:inputType="number"
         android:textColorHint="#808080"
         android:layout_marginRight="24dp"
         android:layout_marginLeft="24dp"
-        android:layout_marginBottom="17dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#000000"
+        android:textStyle="bold"/>
+    <EditText
+        android:id="@+id/edit_pay_dialog_edit"
+        android:hint="수정할 납입 금액을 입력해주세요."
+        android:inputType="number"
+        android:textColorHint="#808080"
+        android:layout_marginRight="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="#000000"
+        android:textStyle="bold"/>
+    <EditText
+        android:id="@+id/edit_count_dialog_edit"
+        android:hint="수정할 납입 횟수를 입력해주세요."
+        android:inputType="number"
+        android:textColorHint="#808080"
+        android:layout_marginRight="24dp"
+        android:layout_marginLeft="24dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:textColor="#000000"
         android:textStyle="bold"/>
     <LinearLayout
-        android:layout_marginTop="19dp"
+        android:layout_marginTop="36dp"
         android:layout_marginBottom="8dp"
         android:layout_gravity="right"
         android:gravity="center"
@@ -40,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="36dp">
         <TextView
-            android:id="@+id/button_dialog_pay_cancel"
+            android:id="@+id/button_dialog_edit_cancel"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:textSize="11sp"
@@ -50,7 +73,7 @@
             android:gravity="center"
             android:text="취소" />
         <TextView
-            android:id="@+id/button_dialog_pay"
+            android:id="@+id/button_dialog_edit"
             android:layout_marginStart="21dp"
             android:layout_marginEnd="19dp"
             android:layout_width="wrap_content"
