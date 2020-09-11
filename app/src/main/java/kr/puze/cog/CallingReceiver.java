@@ -40,28 +40,36 @@ public class CallingReceiver extends BroadcastReceiver {
     }
 
     private void getData(final Context context, String number){
+        if(number.startsWith("+82")){
+            number = number.replace("+82", "0");
+        }
+        number = number.replace(" ", "");
+        number = number.replace("-", "");
+
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference reference = database.getReference("Cogs");
         reference.child(prefUtil.getPhone()).child(number).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get Post object and use the values to update the UI
-                CogData cog = dataSnapshot.getValue(CogData.class);
-                Log.d("LOGTAG/RECEIVER", cog.getDate());
-                Log.d("LOGTAG/RECEIVER", cog.getName());
-                Log.d("LOGTAG/RECEIVER", cog.getNumber());
-                Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getMoney()));
-                Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getPay()));
-                Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getCount()));
-                Log.d("LOGTAG/RECEIVER", dataSnapshot.getValue().toString());
-                Intent serviceIntent = new Intent(context, CallingService.class);
-                serviceIntent.putExtra("date", cog.getDate());
-                serviceIntent.putExtra("name", cog.getName());
-                serviceIntent.putExtra("number", cog.getNumber());
-                serviceIntent.putExtra("money", cog.getMoney());
-                serviceIntent.putExtra("pay", cog.getPay());
-                serviceIntent.putExtra("count", cog.getCount());
-                context.startService(serviceIntent);
+                if(dataSnapshot.exists()){
+                    CogData cog = dataSnapshot.getValue(CogData.class);
+                    Log.d("LOGTAG/RECEIVER", cog.getDate());
+                    Log.d("LOGTAG/RECEIVER", cog.getName());
+                    Log.d("LOGTAG/RECEIVER", cog.getNumber());
+                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getMoney()));
+                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getPay()));
+                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getCount()));
+                    Log.d("LOGTAG/RECEIVER", dataSnapshot.getValue().toString());
+                    Intent serviceIntent = new Intent(context, CallingService.class);
+                    serviceIntent.putExtra("date", cog.getDate());
+                    serviceIntent.putExtra("name", cog.getName());
+                    serviceIntent.putExtra("number", cog.getNumber());
+                    serviceIntent.putExtra("money", cog.getMoney());
+                    serviceIntent.putExtra("pay", cog.getPay());
+                    serviceIntent.putExtra("count", cog.getCount());
+                    context.startService(serviceIntent);
+                }
             }
 
             @Override

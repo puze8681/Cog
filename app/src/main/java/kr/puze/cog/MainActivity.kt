@@ -2,9 +2,11 @@ package kr.puze.cog
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.ProgressDialog
 import android.content.ContentResolver
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.graphics.Color
@@ -17,7 +19,7 @@ import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.Toast
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.google.firebase.database.*
@@ -44,13 +46,13 @@ class MainActivity : AppCompatActivity() {
         getFirebaseData()
         button_contact.setOnClickListener {
             progress()
-            val phoneDataList: ArrayList<PhoneData> = getContacts(this@MainActivity)
-            Log.d("LOGTAG/CONTACTS", "$phoneDataList")
-            addContact(phoneDataList)
+            addContact(getContacts(this@MainActivity))
         }
         button_cog.setOnClickListener {
             if(isNumber && (edit_money.text.trim().isNotEmpty())){
                 addCog(spinner_phone.selectedItemPosition, edit_money.text.toString().toInt())
+            }else{
+                toastUtil.short("장부를 입력해주세요.")
             }
         }
     }
@@ -60,77 +62,98 @@ class MainActivity : AppCompatActivity() {
         getRecyclerData()
     }
 
-    private fun addContact(contactList: ArrayList<PhoneData>){
-        var phoneNum = getPhone()
-        if(phoneNum != null){
-            if(phoneNum.startsWith("+82")){
-                phoneNum = phoneNum.replace("+82", "0")
-            }
-            prefUtil.phone = phoneNum
-            val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-            val reference: DatabaseReference = database.getReference("Address")
-            reference.child(phoneNum).setValue(contactList).addOnCompleteListener {
-                if(it.isSuccessful){
-                    toastUtil.short("전화번호부 업데이트 성공.")
-                }else{
-                    toastUtil.short("전화번호부 업데이트 실패.")
-                }
-                dismiss()
-            }
-        }else{
+    private fun addContact(contactList: ArrayList<PhoneData>?){
+        if(contactList.isNullOrEmpty()){
             dismiss()
-            toastUtil.short("해당 기기의 전화번호를 알지 못하면 전화번호부를 등록할 수 없습니다.")
+            toastUtil.short("전화번호부가 비어있습니다.")
+        }else{
+            Log.d("LOGTAG/CONTACTS", "$contactList")
+            var phoneNum = getPhone()
+            if(phoneNum != null){
+                if(phoneNum.startsWith("+82")){
+                    phoneNum = phoneNum.replace("+82", "0")
+                }
+                prefUtil.phone = phoneNum
+
+                contactList.sortWith(Comparator { o1, o2 ->
+                    o1.name.compareTo(o2.name)
+                })
+
+                val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+                val reference: DatabaseReference = database.getReference("Address")
+                reference.child(phoneNum).setValue(contactList).addOnCompleteListener {
+                    if(it.isSuccessful){
+                        toastUtil.short("전화번호부 업데이트 성공.")
+                    }else{
+                        Log.d("LOGTAG/EXCEPTION", "${it.exception}")
+                        toastUtil.short("전화번호부 업데이트 실패.")
+                    }
+                    dismiss()
+                }
+            }else{
+                dismiss()
+                toastUtil.short("해당 기기의 전화번호를 알지 못하면 전화번호부를 등록할 수 없습니다.")
+            }
         }
     }
 
-    private fun getPhone(): String? {
-        val phoneMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        return if (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            null
-        } else phoneMgr.line1Number
+    private fun getContacts(context: Context): ArrayList<PhoneData>?{
+        if((ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) ||
+            (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) ||
+            (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED)){
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), 101)
+            return null
+        }else{
+            val phoneDataList = ArrayList<PhoneData>()
+            val resolver: ContentResolver = context.contentResolver
+            val phoneUri: Uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            val projection: Array<String> = arrayOf(
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val cursor: Cursor? = resolver.query(phoneUri, projection, null, null, null)
+            cursor?.let {
+                while (cursor.moveToNext()){
+                    val idIndex = cursor.getColumnIndex(projection[0])
+                    val nameIndex = cursor.getColumnIndex(projection[1])
+                    val numberIndex = cursor.getColumnIndex(projection[2])
+
+                    val id: String = cursor.getString(idIndex)
+                    val name: String = cursor.getString(nameIndex)
+                    var number: String = cursor.getString(numberIndex)
+                    if(number.startsWith("+82")){
+                        number = number.replace("+82", "0")
+                    }
+                    number = number.replace(" ", "")
+                    number = number.replace("-", "")
+
+                    val phoneData = PhoneData(id, name, number)
+                    Log.d("LOGTAG/GETCONTACTS", "$phoneData")
+                    phoneDataList.add(phoneData)
+                }
+                cursor.close()
+            }
+            return phoneDataList
+        }
     }
 
     private fun addCog(index: Int, money: Int){
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
-        val cogData = CogData(phoneList[index].name, phoneList[index].tel, timeStamp, money, 0, 0)
-        val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-        val reference: DatabaseReference = database.getReference("Cogs")
-        reference.child(prefUtil.phone).child(phoneList[index].tel).setValue(cogData).addOnCompleteListener {
-            if(it.isSuccessful){
-                toastUtil.short("장부 등록 성공.")
-            }else{
-                toastUtil.short("장부 등록 실패.")
+        if(index == 0){
+            toastUtil.short("전화번호를 선택해주세요.")
+        }else{
+            val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
+            val cogData = CogData(phoneList[index-1].name, phoneList[index-1].tel, timeStamp, money, 0, 0)
+            val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+            val reference: DatabaseReference = database.getReference("Cogs")
+            reference.child(prefUtil.phone).child(phoneList[index-1].tel).setValue(cogData).addOnCompleteListener {
+                if(it.isSuccessful){
+                    toastUtil.short("장부 등록 성공.")
+                }else{
+                    toastUtil.short("장부 등록 실패.")
+                }
+                dismiss()
             }
-            dismiss()
         }
-    }
-
-    private fun getContacts(context: Context): ArrayList<PhoneData>{
-        val phoneDataList = ArrayList<PhoneData>()
-        val resolver: ContentResolver = context.contentResolver
-        val phoneUri: Uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-        val projection: Array<String> = arrayOf(
-            ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-            ContactsContract.CommonDataKinds.Phone.NUMBER)
-        val cursor: Cursor? = resolver.query(phoneUri, projection, null, null, null)
-        cursor?.let {
-            while (cursor.moveToNext()){
-                val idIndex = cursor.getColumnIndex(projection[0])
-                val nameIndex = cursor.getColumnIndex(projection[1])
-                val numberIndex = cursor.getColumnIndex(projection[2])
-
-                val id: String = cursor.getString(idIndex)
-                val name: String = cursor.getString(nameIndex)
-                val number: String = cursor.getString(numberIndex)
-
-                val phoneData: PhoneData =
-                    PhoneData(id, name, number)
-                phoneDataList.add(phoneData)
-            }
-            cursor.close()
-        }
-        return phoneDataList
     }
 
     private fun getSpinner(){
@@ -140,37 +163,40 @@ class MainActivity : AppCompatActivity() {
             ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 toastUtil.short("데이터 읽기 실패.")
-                spinnerList.clear()
-                spinnerList.add("010-1234-1234")
-                spinnerList.add("010-1234-1234")
-                spinnerList.add("010-1234-1234")
-                setSpinner(spinnerList)
             }
 
             override fun onDataChange(dataSnapShot: DataSnapshot) {
                 spinnerList.clear()
+                spinnerList.add("전화번호를 선택하세요.")
                 phoneList.clear()
                 dataSnapShot.children.forEach{
                     it.getValue(PhoneData::class.java)?.let { data ->
                         phoneList.add(PhoneData(data.id, data.name, data.tel))
-                        data.tel?.let { it -> spinnerList.add(it) }
+                        val address = "${data.tel}: ${data.name}"
+                        spinnerList.add(address)
                     }
-                    setSpinner(spinnerList)
                 }
+                setSpinner(spinnerList)
             }
         })
     }
 
     private fun setSpinner(items: ArrayList<String>){
-        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items)
+        spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, items)
         spinner_phone.adapter = spinnerAdapter
+        spinner_phone.setSelection(0)
         spinner_phone.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
                 Log.d("LOGTAG/PHONEACTIVITY", "${parent.getItemAtPosition(position)}")
-                isNumber = true
+                isNumber = position != 0
+                (parent.getChildAt(0) as TextView).setTextColor(Color.BLACK)
+                (parent.getChildAt(0) as TextView).textSize = 18f
             }
             override fun onNothingSelected(parent: AdapterView<*>) {
                 isNumber = false
+                (parent.getChildAt(0) as TextView).text = "전화번호를 선택해주세요."
+                (parent.getChildAt(0) as TextView).setTextColor(Color.GRAY)
+                (parent.getChildAt(0) as TextView).textSize = 18f
             }
         }
     }
@@ -182,11 +208,6 @@ class MainActivity : AppCompatActivity() {
             ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 toastUtil.short("데이터 읽기 실패.")
-                cogList.clear()
-                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
-                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
-                cogList.add(CogData("이름","010-1234-1234","2020.01.01",30000,20000,2))
-                setRecyclerView(cogList)
             }
 
             override fun onDataChange(dataSnapShot: DataSnapshot) {
@@ -195,13 +216,16 @@ class MainActivity : AppCompatActivity() {
                     it.getValue(CogData::class.java)?.let { data ->
                         cogList.add(CogData(data.name, data.number, data.date, data.money, data.pay, data.count))
                     }
-                    setRecyclerView(cogList)
                 }
+                setRecyclerView(cogList)
             }
         })
     }
 
     private fun setRecyclerView(items: ArrayList<CogData>){
+        items.sortWith(Comparator { o1, o2 ->
+            o1.name.compareTo(o2.name)
+        })
         cogAdapter = CogRecyclerAdapter(items, this@MainActivity, toastUtil, dialogUtil, prefUtil.phone)
         recycler_main.adapter = cogAdapter
         (recycler_main.adapter as CogRecyclerAdapter).notifyDataSetChanged()
@@ -209,6 +233,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object{
         lateinit var cogAdapter: CogRecyclerAdapter
+        lateinit var spinnerAdapter: ArrayAdapter<String>
         val cogList = ArrayList<CogData>()
         var isNumber = false
         lateinit var progress: ProgressDialog
@@ -233,5 +258,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun dismiss() {
         progress.dismiss()
+    }
+
+    private fun getPhone(): String? {
+        val phoneMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        return if (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            null
+        } else phoneMgr.line1Number
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == 101){
+            if (resultCode == Activity.RESULT_OK){
+                toastUtil.short("전화번호 업데이트를 다시 진행해주세요.")
+            }
+        }
     }
 }

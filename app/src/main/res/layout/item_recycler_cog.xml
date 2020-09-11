@@ -4,7 +4,6 @@
     android:layout_height="wrap_content"
     android:padding="8dp"
     android:orientation="vertical">
-    <!--    번호 / 전체 금액 / 납입 금액 / 납부 횟수 / [추가 납입] / [수정]-->
     <TextView
         android:id="@+id/text_date_cog"
         android:textStyle="bold"

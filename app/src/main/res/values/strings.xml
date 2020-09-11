@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Cog</string>
+    <string name="spinner">전화번호를 선택해주세요.</string>
 </resources>

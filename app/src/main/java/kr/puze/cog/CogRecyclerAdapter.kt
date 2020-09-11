@@ -18,7 +18,7 @@ class CogRecyclerAdapter(var items: ArrayList<CogData>, var context: Context, va
     @SuppressLint("LongLogTag")
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         Log.d("LOGTAG, ChatRecyclerAdapter", "onCreate")
-        return ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_recycler_cog, null))
+        return ViewHolder(LayoutInflater.from(context).inflate(R.layout.item_recycler_cog, parent, false))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -28,7 +28,7 @@ class CogRecyclerAdapter(var items: ArrayList<CogData>, var context: Context, va
         }
 
         holder.itemView.button_add_cog.setOnClickListener { dialogUtil.dialogPay(myPhone, items[position]) }
-        holder.itemView.button_edit_cog.setOnClickListener {  }
+        holder.itemView.button_edit_cog.setOnClickListener { dialogUtil.dialogEdit(myPhone, items[position]) }
         holder.itemView.button_delete_cog.setOnClickListener {
             val database: FirebaseDatabase = FirebaseDatabase.getInstance()
             val reference: DatabaseReference = database.getReference("Cogs")
