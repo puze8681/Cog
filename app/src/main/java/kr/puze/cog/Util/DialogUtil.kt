@@ -57,23 +57,25 @@ class DialogUtil(context: Context) {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setContentView(R.layout.dialog_edit)
         dialog.edit_number_dialog_edit.setText("${cog.number}")
+        dialog.edit_name_dialog_edit.setText("${cog.name}")
         dialog.edit_money_dialog_edit.setText("${cog.money}")
         dialog.edit_pay_dialog_edit.setText("${cog.pay}")
         dialog.edit_count_dialog_edit.setText("${cog.count}")
         dialog.button_dialog_edit.setOnClickListener {
-            editPay(myPhone, cog, dialog.edit_number_dialog_edit.text.toString(), dialog.edit_money_dialog_edit.text.toString().toInt(), dialog.edit_pay_dialog_edit.text.toString().toInt(), dialog.edit_count_dialog_edit.text.toString().toInt())
+            editCog(myPhone, cog, dialog.edit_number_dialog_edit.text.toString(), dialog.edit_name_dialog_edit.text.toString(), dialog.edit_money_dialog_edit.text.toString().toInt(), dialog.edit_pay_dialog_edit.text.toString().toInt(), dialog.edit_count_dialog_edit.text.toString().toInt())
             dialog.dismiss()
         }
         dialog.button_dialog_edit_cancel.setOnClickListener { dialog.dismiss() }
         dialog.show()
     }
 
-    private fun editPay(myPhone: String, cog: CogData, number: String, money: Int, pay: Int, count: Int){
+    private fun editCog(myPhone: String, cog: CogData, number: String, name: String, money: Int, pay: Int, count: Int){
         val database: FirebaseDatabase = FirebaseDatabase.getInstance()
         val reference: DatabaseReference = database.getReference("Cogs")
         reference.child(myPhone).child(cog.number).ref.removeValue().addOnCompleteListener {
             if(it.isSuccessful){
                 cog.number = number
+                cog.name = name
                 cog.money = money
                 cog.pay = pay
                 cog.count = count

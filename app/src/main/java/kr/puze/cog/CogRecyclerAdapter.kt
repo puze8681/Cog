@@ -50,9 +50,9 @@ class CogRecyclerAdapter(var items: ArrayList<CogData>, var context: Context, va
             itemView.text_number_cog.text = item.number
             itemView.text_date_cog.text = item.date
             itemView.text_name_cog.text = "${item.name}"
-            itemView.text_money_cog.text = "${item.money}"
-            itemView.text_pay_cog.text = "${item.pay}"
-            itemView.text_count_cog.text = "${item.count}"
+            itemView.text_money_cog.text = "${item.money} 원"
+            itemView.text_pay_cog.text = "${item.pay} 원"
+            itemView.text_count_cog.text = "${item.count}번 납입"
         }
     }
 

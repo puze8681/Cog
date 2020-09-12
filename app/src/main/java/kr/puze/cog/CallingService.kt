@@ -6,10 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.IBinder
+import android.util.Log
 import android.view.*
 import android.widget.TextView
 import kotlinx.android.synthetic.main.dialog_call.view.*
 import kotlin.math.roundToInt
+
 
 @SuppressLint("ClickableViewAccessibility")
 class CallingService: Service() {
@@ -37,7 +39,7 @@ class CallingService: Service() {
 
     override fun onCreate() {
         super.onCreate()
-
+        Log.d("LOGTAG/SERVICE", "onCreate")
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val display = windowManager.defaultDisplay as Display
         val width = ((display.width) * 0.9).roundToInt()
@@ -45,8 +47,11 @@ class CallingService: Service() {
         params = WindowManager.LayoutParams(
             width,
             WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
+                    or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                    or WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                    or WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
             PixelFormat.TRANSLUCENT)
 
         val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
@@ -101,9 +106,9 @@ class CallingService: Service() {
             dateView.text = callDate
             nameView.text = callName
             numberView.text = callNumber
-            moneyView.text = "$callMoney"
-            payView.text = "$callPay"
-            countView.text = "$callCount"
+            moneyView.text = "원금: $callMoney"
+            payView.text = "납입금: $callPay"
+            countView.text = "납입 횟수: $callCount"
         }
 
         return START_REDELIVER_INTENT
@@ -127,7 +132,7 @@ class CallingService: Service() {
         removePopup()
     }
 
-    fun removePopup(){
+    private fun removePopup(){
         if(rootView != null && windowManager != null) windowManager.removeView(rootView)
     }
 }

@@ -21,21 +21,31 @@ import www.okit.co.Utils.PrefUtil;
 public class CallingReceiver extends BroadcastReceiver {
     public static final String TAG = "PHONE STATE";
     private static String mLastState;
-    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private PrefUtil prefUtil;
 
-    @Override
-    public void onReceive(final Context context, Intent intent) {
-        Log.d(TAG,"onReceive()");
-        /** * http://mmarvick.github.io/blog/blog/lollipop-multiple-broadcastreceiver-call-state/ * 2번 호출되는 문제 해결 */
+    public void onReceive(Context context, Intent intent) {
         prefUtil = new PrefUtil(context);
-        String state = intent.getStringExtra(TelephonyManager.EXTRA_STATE);
-        if (state.equals(mLastState)) { return; }
-        else { mLastState = state; }
-        if (TelephonyManager.EXTRA_STATE_RINGING.equals(state)) {
-            String incomingNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER);
-            final String phone_number = PhoneNumberUtils.formatNumber(incomingNumber);
-            getData(context, phone_number);
+
+        if (intent.getAction().equals("android.intent.action.NEW_OUTGOING_CALL")) {
+            String savedNumber = intent.getExtras().getString("android.intent.extra.PHONE_NUMBER");
+        } else{
+            String stateStr = intent.getExtras().getString(TelephonyManager.EXTRA_STATE);
+            String number = intent.getExtras().getString(TelephonyManager.EXTRA_INCOMING_NUMBER);
+            int state = 0;
+
+            if (stateStr.equals(TelephonyManager.EXTRA_STATE_IDLE)) {
+                state = TelephonyManager.CALL_STATE_IDLE;
+            } else if(stateStr.equals(TelephonyManager.EXTRA_STATE_OFFHOOK)){
+                state = TelephonyManager.CALL_STATE_OFFHOOK;
+            } else if(stateStr.equals(TelephonyManager.EXTRA_STATE_RINGING)){
+                state = TelephonyManager.CALL_STATE_RINGING;
+            }
+
+            if (number != null && !number.isEmpty() && !number.equals("null")) {
+                //onCallStateChanged(context, state, number);
+                Log.d("TEST :","NUMBER =>"+number);
+                getData(context, number);
+            }
         }
     }
 
@@ -52,6 +62,7 @@ public class CallingReceiver extends BroadcastReceiver {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get Post object and use the values to update the UI
+                Log.w(TAG, "loadPost:onDataChange");
                 if(dataSnapshot.exists()){
                     CogData cog = dataSnapshot.getValue(CogData.class);
                     Log.d("LOGTAG/RECEIVER", cog.getDate());

@@ -12,8 +12,10 @@ import android.database.Cursor
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
+import android.provider.Settings
 import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
@@ -98,10 +100,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getContacts(context: Context): ArrayList<PhoneData>?{
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                val intent = Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:$packageName")
+                )
+                startActivityForResult(intent, 101)
+                false
+            } else {
+                true
+            }
+        } else {
+            true
+        }
         if((ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) ||
             (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) ||
+            (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) ||
             (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED)){
-            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS), 101)
+            ActivityCompat.requestPermissions(this@MainActivity, arrayOf(Manifest.permission.READ_PHONE_STATE, Manifest.permission.READ_CONTACTS, Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CONTACTS), 101)
+            Log.d("LOGTAG/GETCONTACTS", "Permission Null")
+            Log.d("LOGTAG/GETCONTACTS", (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED).toString())
+            Log.d("LOGTAG/GETCONTACTS", (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED).toString())
+            Log.d("LOGTAG/GETCONTACTS", (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED).toString())
+            Log.d("LOGTAG/GETCONTACTS", (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.WRITE_CONTACTS) != PackageManager.PERMISSION_GRANTED).toString())
             return null
         }else{
             val phoneDataList = ArrayList<PhoneData>()
