@@ -16,22 +16,27 @@ import kotlin.math.roundToInt
 @SuppressLint("ClickableViewAccessibility")
 class CallingService: Service() {
 
-    var callDate: String = ""
     var callName: String = ""
     var callNumber: String = ""
-    var callMoney: Int = 0
-    var callPay: Int = 0
-    var callCount: Int = 0
+    var callLoanMoney: String = ""
+    var callPayCount: String = ""
+    var callPay: String = ""
+    var callLoanCount: String = ""
+    var callDate: ArrayList<String> = ArrayList()
+    var callPayName: ArrayList<String> = ArrayList()
+
     lateinit var windowManager: WindowManager
     lateinit var params: WindowManager.LayoutParams
     lateinit var rootView: View
-    lateinit var dateView: TextView
     lateinit var nameView: TextView
     lateinit var numberView: TextView
     lateinit var moneyView: TextView
     lateinit var payView: TextView
-    lateinit var countView: TextView
-    lateinit var buttonView: TextView
+    lateinit var unpaidView: TextView
+    lateinit var loanCountView: TextView
+    lateinit var firstLoanDateView: TextView
+    lateinit var loanDateView: TextView
+    lateinit var payerView: TextView
 
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")
@@ -56,14 +61,15 @@ class CallingService: Service() {
 
         val layoutInflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
         rootView = layoutInflater.inflate(R.layout.dialog_call, null)
-        dateView = rootView.text_date_dialog_call
         nameView = rootView.text_name_dialog_call
         numberView = rootView.text_number_dialog_call
         moneyView = rootView.text_money_dialog_call
         payView = rootView.text_pay_dialog_call
-        countView = rootView.text_count_dialog_call
-        buttonView = rootView.button_dialog_call
-        buttonView.setOnClickListener { removePopup() }
+        unpaidView = rootView.text_unpaid_dialog_call
+        loanCountView = rootView.text_loan_count_dialog_call
+        firstLoanDateView = rootView.text_first_loan_date_dialog_call
+        loanDateView = rootView.text_loan_date_dialog_call
+        payerView = rootView.text_payer_dialog_call
 
         setDraggable()
     }
@@ -103,12 +109,24 @@ class CallingService: Service() {
         setExtra(intent)
 
         if(!callDate.isNullOrEmpty() && !callName.isNullOrEmpty() && !callNumber.isNullOrEmpty()){
-            dateView.text = callDate
+            var dateString = "대출: "
+            for (i in callDate){
+                dateString += "\n$i"
+            }
+            var payerString = "입금자명: "
+            for (i in callPayName){
+                payerString += "$i, "
+            }
+
             nameView.text = callName
             numberView.text = callNumber
-            moneyView.text = "원금: $callMoney"
-            payView.text = "납입금: $callPay"
-            countView.text = "납입 횟수: $callCount"
+            moneyView.text = "대출금액: $callLoanMoney"
+            payView.text = "$callPayCount 번($callPay 원)"
+            unpaidView.text = "미납: ${callLoanMoney.toInt() - callPay.toInt()}"
+            loanCountView.text = "대출횟수: $callLoanCount 번"
+            firstLoanDateView.text = "첫대출: ${callDate[0]}"
+            loanDateView.text = dateString
+            payerView.text = payerString
         }
 
         return START_REDELIVER_INTENT
@@ -119,12 +137,15 @@ class CallingService: Service() {
             removePopup()
             return
         }
-        callDate = intent.getStringExtra("date")
+
         callName = intent.getStringExtra("name")
         callNumber = intent.getStringExtra("number")
-        callMoney = intent.getIntExtra("money", 0)
-        callPay = intent.getIntExtra("pay", 0)
-        callCount = intent.getIntExtra("count", 0)
+        callLoanMoney = intent.getStringExtra("loanMoney")
+        callPayCount = intent.getStringExtra("payCount")
+        callPay = intent.getStringExtra("pay")
+        callLoanCount = intent.getStringExtra("loanCount")
+        callDate = intent.getStringArrayListExtra("date")
+        callPayName = intent.getStringArrayListExtra("payName")
     }
 
     override fun onDestroy() {

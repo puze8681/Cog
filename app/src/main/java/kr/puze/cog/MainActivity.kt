@@ -16,7 +16,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.Settings
-import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.View
 import android.widget.AdapterView
@@ -70,31 +69,20 @@ class MainActivity : AppCompatActivity() {
             toastUtil.short("전화번호부가 비어있습니다.")
         }else{
             Log.d("LOGTAG/CONTACTS", "$contactList")
-            var phoneNum = getPhone()
-            if(phoneNum != null){
-                if(phoneNum.startsWith("+82")){
-                    phoneNum = phoneNum.replace("+82", "0")
-                }
-                prefUtil.phone = phoneNum
+            contactList.sortWith(Comparator { o1, o2 ->
+                o1.name.compareTo(o2.name)
+            })
 
-                contactList.sortWith(Comparator { o1, o2 ->
-                    o1.name.compareTo(o2.name)
-                })
-
-                val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-                val reference: DatabaseReference = database.getReference("Address")
-                reference.child(phoneNum).setValue(contactList).addOnCompleteListener {
-                    if(it.isSuccessful){
-                        toastUtil.short("전화번호부 업데이트 성공.")
-                    }else{
-                        Log.d("LOGTAG/EXCEPTION", "${it.exception}")
-                        toastUtil.short("전화번호부 업데이트 실패.")
-                    }
-                    dismiss()
+            val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+            val reference: DatabaseReference = database.getReference("Address")
+            reference.setValue(contactList).addOnCompleteListener {
+                if(it.isSuccessful){
+                    toastUtil.short("전화번호부 업데이트 성공.")
+                }else{
+                    Log.d("LOGTAG/EXCEPTION", "${it.exception}")
+                    toastUtil.short("전화번호부 업데이트 실패.")
                 }
-            }else{
                 dismiss()
-                toastUtil.short("해당 기기의 전화번호를 알지 못하면 전화번호부를 등록할 수 없습니다.")
             }
         }
     }
@@ -163,25 +151,47 @@ class MainActivity : AppCompatActivity() {
         if(index == 0){
             toastUtil.short("전화번호를 선택해주세요.")
         }else{
-            val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
-            val cogData = CogData(phoneList[index-1].name, phoneList[index-1].tel, timeStamp, money, 0, 0)
             val database: FirebaseDatabase = FirebaseDatabase.getInstance()
             val reference: DatabaseReference = database.getReference("Cogs")
-            reference.child(prefUtil.phone).child(phoneList[index-1].tel).setValue(cogData).addOnCompleteListener {
-                if(it.isSuccessful){
-                    toastUtil.short("장부 등록 성공.")
-                }else{
-                    toastUtil.short("장부 등록 실패.")
+            val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
+            reference.child(phoneList[index-1].tel).addListenerForSingleValueEvent(object: ValueEventListener{
+                override fun onCancelled(error: DatabaseError) {
                 }
-                dismiss()
-            }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    var cogData: CogData? = null
+                    if(snapshot.exists()){
+                        cogData = snapshot.getValue(CogData::class.java)
+                        if(cogData!=null){
+                            cogData.name = phoneList[index-1].name
+                            cogData.date.add(timeStamp)
+                            cogData.loanMoney += money
+                            cogData.loanCount += 1
+                        }
+                    }
+                    if(cogData == null){
+                        val date: ArrayList<String> = ArrayList()
+                        date.add(timeStamp)
+                        val payName: ArrayList<String> = ArrayList()
+                        cogData = CogData(phoneList[index-1].name, phoneList[index-1].tel, date, money, 1, 0,0, payName)
+                        reference.child(phoneList[index-1].tel).setValue(cogData).addOnCompleteListener {
+                            if(it.isSuccessful){
+                                toastUtil.short("장부 등록 성공.")
+                            }else{
+                                toastUtil.short("장부 등록 실패.")
+                            }
+                            dismiss()
+                        }
+                    }
+                }
+            })
         }
     }
 
     private fun getSpinner(){
         val database: FirebaseDatabase = FirebaseDatabase.getInstance()
         val reference: DatabaseReference = database.getReference("Address")
-        reference.child(prefUtil.phone).addValueEventListener(object :
+        reference.addValueEventListener(object :
             ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 toastUtil.short("데이터 읽기 실패.")
@@ -226,7 +236,7 @@ class MainActivity : AppCompatActivity() {
     private fun getRecyclerData(){
         val database: FirebaseDatabase = FirebaseDatabase.getInstance()
         val reference: DatabaseReference = database.getReference("Cogs")
-        reference.child(prefUtil.phone).addValueEventListener(object :
+        reference.addValueEventListener(object :
             ValueEventListener {
             override fun onCancelled(p0: DatabaseError) {
                 toastUtil.short("데이터 읽기 실패.")
@@ -236,7 +246,7 @@ class MainActivity : AppCompatActivity() {
                 cogList.clear()
                 dataSnapShot.children.forEach{
                     it.getValue(CogData::class.java)?.let { data ->
-                        cogList.add(CogData(data.name, data.number, data.date, data.money, data.pay, data.count))
+                        cogList.add(CogData(data.name, data.number, data.date, data.loanMoney, data.pay, data.payCount))
                     }
                 }
                 setRecyclerView(cogList)
@@ -248,7 +258,7 @@ class MainActivity : AppCompatActivity() {
         items.sortWith(Comparator { o1, o2 ->
             o1.name.compareTo(o2.name)
         })
-        cogAdapter = CogRecyclerAdapter(items, this@MainActivity, toastUtil, dialogUtil, prefUtil.phone)
+        cogAdapter = CogRecyclerAdapter(items, this@MainActivity, toastUtil, dialogUtil)
         recycler_main.adapter = cogAdapter
         (recycler_main.adapter as CogRecyclerAdapter).notifyDataSetChanged()
     }
@@ -280,13 +290,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun dismiss() {
         progress.dismiss()
-    }
-
-    private fun getPhone(): String? {
-        val phoneMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        return if (ActivityCompat.checkSelfPermission(this@MainActivity, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            null
-        } else phoneMgr.line1Number
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

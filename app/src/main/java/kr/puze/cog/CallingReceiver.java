@@ -3,9 +3,6 @@ package kr.puze.cog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
@@ -58,28 +55,25 @@ public class CallingReceiver extends BroadcastReceiver {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference reference = database.getReference("Cogs");
-        reference.child(prefUtil.getPhone()).child(number).addListenerForSingleValueEvent(new ValueEventListener() {
+        reference.child(number).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 // Get Post object and use the values to update the UI
                 Log.w(TAG, "loadPost:onDataChange");
                 if(dataSnapshot.exists()){
                     CogData cog = dataSnapshot.getValue(CogData.class);
-                    Log.d("LOGTAG/RECEIVER", cog.getDate());
-                    Log.d("LOGTAG/RECEIVER", cog.getName());
-                    Log.d("LOGTAG/RECEIVER", cog.getNumber());
-                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getMoney()));
-                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getPay()));
-                    Log.d("LOGTAG/RECEIVER", String.valueOf(cog.getCount()));
-                    Log.d("LOGTAG/RECEIVER", dataSnapshot.getValue().toString());
                     Intent serviceIntent = new Intent(context, CallingService.class);
-                    serviceIntent.putExtra("date", cog.getDate());
-                    serviceIntent.putExtra("name", cog.getName());
-                    serviceIntent.putExtra("number", cog.getNumber());
-                    serviceIntent.putExtra("money", cog.getMoney());
-                    serviceIntent.putExtra("pay", cog.getPay());
-                    serviceIntent.putExtra("count", cog.getCount());
-                    context.startService(serviceIntent);
+                    if(cog.getLoanMoney() - cog.getPay() > 0){
+                        serviceIntent.putExtra("name", cog.getName());
+                        serviceIntent.putExtra("number", cog.getNumber());
+                        serviceIntent.putExtra("loanMoney", String.valueOf(cog.getLoanMoney()));
+                        serviceIntent.putExtra("payCount", String.valueOf(cog.getPayCount()));
+                        serviceIntent.putExtra("pay", String.valueOf(cog.getPay()));
+                        serviceIntent.putExtra("loanCount", String.valueOf(cog.getLoanCount()));
+                        serviceIntent.putExtra("date", cog.getDate());
+                        serviceIntent.putExtra("payName", cog.getPayName());
+                        context.startService(serviceIntent);
+                    }
                 }
             }
 
