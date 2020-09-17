@@ -1,37 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp"
     android:background="#fff"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="8dp">
+
     <TextView
         android:id="@+id/text_name_item_cog"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="32dp"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="8dp"
-        android:gravity="center|left"
+        android:gravity="center"
         android:text="홍길동"
         android:textColor="#000000"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/text_number_item_cog"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="32dp"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="8dp"
-        android:gravity="center|left"
+        android:gravity="center"
         android:text="010-1234-1234"
         android:textColor="#000000"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
-
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:orientation="horizontal"
         android:weightSum="2">
 
@@ -42,32 +43,7 @@
             android:layout_weight="1"
             android:text="대출금액: 2000000원"
             android:textColor="#000000"
-            android:textSize="14sp" />
-
-        <TextView
-            android:id="@+id/text_pay_item_cog"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="납입횟수: 99번(150000원)"
-            android:textColor="#000000"
-            android:textSize="14sp" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:orientation="horizontal"
-        android:weightSum="2">
-
-        <TextView
-            android:id="@+id/text_unpaid_item_cog"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="미납: 2000000원"
-            android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/text_loan_count_item_cog"
@@ -76,48 +52,52 @@
             android:layout_weight="1"
             android:text="대출횟수: 99번(150000원)"
             android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
     </LinearLayout>
-
+    <TextView
+        android:id="@+id/text_pay_item_cog"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:text="납입횟수: 99번(150000원)"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+    <TextView
+        android:id="@+id/text_unpaid_item_cog"
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:text="미납: 2000000원"
+        android:textColor="#000000"
+        android:textSize="18sp" />
     <TextView
         android:id="@+id/text_first_loan_date_item_cog"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:text="첫대출: 2020.01.01"
         android:textColor="#000000"
-        android:textSize="14sp" />
-
+        android:textSize="18sp" />
     <TextView
         android:id="@+id/text_loan_date_item_cog"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:text="대출: 2020.01.01\n2020.02.02"
+        android:layout_height="28dp"
+        android:text="대출: 2020.01.01, 2020.02.02"
+        android:ellipsize="marquee"
         android:textColor="#000000"
-        android:textSize="14sp" />
-
-    <CalendarView
+        android:textSize="18sp" />
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/calendar_item_cog"
-        android:background="#273149"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusedMonthDateColor="#EC5656"
-        android:contextClickable="false"
-        android:maxDate="12/31/2023"
-        android:minDate="01/01/2020"
-        android:selectedWeekBackgroundColor="#ffff00"
-        android:showWeekNumber="false"
-        android:unfocusedMonthDateColor="#0000ff"
-        android:weekSeparatorLineColor="#00ff00" />
-
+        android:layout_height="240dp"
+        app:mcv_showOtherDates="all"
+        app:mcv_selectionColor="#00F" />
     <TextView
         android:id="@+id/text_payer_item_cog"
-        android:layout_marginTop="8dp"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:text="입금자명 :"
         android:textColor="#000000"
-        android:textSize="14sp" />
+        android:textSize="18sp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -175,8 +155,9 @@
             android:textSize="18sp"
             android:textStyle="bold" />
     </LinearLayout>
+
     <View
-        android:background="#434343"
         android:layout_width="match_parent"
-        android:layout_height="1dp"/>
+        android:layout_height="1dp"
+        android:background="#434343" />
 </LinearLayout>

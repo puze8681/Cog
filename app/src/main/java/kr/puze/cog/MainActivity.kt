@@ -163,8 +163,7 @@ class MainActivity : AppCompatActivity() {
                     if(snapshot.exists()){
                         cogData = snapshot.getValue(CogData::class.java)
                         if(cogData!=null){
-                            cogData.name = phoneList[index-1].name
-                            cogData.date.add(timeStamp)
+                            if(!cogData.date.contains(timeStamp)) cogData.date.add(timeStamp)
                             cogData.loanMoney += money
                             cogData.loanCount += 1
                         }
@@ -174,14 +173,14 @@ class MainActivity : AppCompatActivity() {
                         date.add(timeStamp)
                         val payName: ArrayList<String> = ArrayList()
                         cogData = CogData(phoneList[index-1].name, phoneList[index-1].tel, date, money, 1, 0,0, payName)
-                        reference.child(phoneList[index-1].tel).setValue(cogData).addOnCompleteListener {
-                            if(it.isSuccessful){
-                                toastUtil.short("장부 등록 성공.")
-                            }else{
-                                toastUtil.short("장부 등록 실패.")
-                            }
-                            dismiss()
+                    }
+                    reference.child(phoneList[index-1].tel).setValue(cogData).addOnCompleteListener {
+                        if(it.isSuccessful){
+                            toastUtil.short("장부 등록 성공.")
+                        }else{
+                            toastUtil.short("장부 등록 실패.")
                         }
+                        dismiss()
                     }
                 }
             })
@@ -246,7 +245,7 @@ class MainActivity : AppCompatActivity() {
                 cogList.clear()
                 dataSnapShot.children.forEach{
                     it.getValue(CogData::class.java)?.let { data ->
-                        cogList.add(CogData(data.name, data.number, data.date, data.loanMoney, data.pay, data.payCount))
+                        cogList.add(CogData(data.name, data.number, data.date, data.loanMoney, data.loanCount, data.pay, data.payCount, data.payName))
                     }
                 }
                 setRecyclerView(cogList)

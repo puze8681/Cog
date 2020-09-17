@@ -39,12 +39,10 @@ class DialogUtil(context: Context) {
     }
 
     private fun addPay(cog: CogData, pay: Int, name: String){
-        val timeStamp = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Calendar.getInstance().timeInMillis)
         val database: FirebaseDatabase = FirebaseDatabase.getInstance()
         val reference: DatabaseReference = database.getReference("Cogs")
         cog.pay = cog.pay + pay
         cog.payCount = cog.payCount + 1
-        cog.date.add(timeStamp)
         if(!cog.payName.contains(name)) cog.payName.add(name)
         reference.child(cog.number).setValue(cog).addOnCompleteListener {
             if(it.isSuccessful){

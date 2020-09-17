@@ -4,12 +4,19 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.PixelFormat
 import android.os.IBinder
 import android.util.Log
 import android.view.*
 import android.widget.TextView
+import com.applandeo.materialcalendarview.CalendarView
+import com.prolificinteractive.materialcalendarview.CalendarDay
+import com.prolificinteractive.materialcalendarview.MaterialCalendarView
 import kotlinx.android.synthetic.main.dialog_call.view.*
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
 
@@ -37,6 +44,7 @@ class CallingService: Service() {
     lateinit var firstLoanDateView: TextView
     lateinit var loanDateView: TextView
     lateinit var payerView: TextView
+    lateinit var calendarView: MaterialCalendarView
 
     override fun onBind(intent: Intent?): IBinder? {
         TODO("Not yet implemented")
@@ -70,6 +78,7 @@ class CallingService: Service() {
         firstLoanDateView = rootView.text_first_loan_date_dialog_call
         loanDateView = rootView.text_loan_date_dialog_call
         payerView = rootView.text_payer_dialog_call
+        calendarView = rootView.calendar_dialog_call
 
         setDraggable()
     }
@@ -109,9 +118,19 @@ class CallingService: Service() {
         setExtra(intent)
 
         if(!callDate.isNullOrEmpty() && !callName.isNullOrEmpty() && !callNumber.isNullOrEmpty()){
+
+            val simpleDateFormat = (SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()))
+            val dates = ArrayList<CalendarDay>()
+
             var dateString = "대출: "
             for (i in callDate){
-                dateString += "\n$i"
+                dateString += "$i, "
+                val date = simpleDateFormat.parse(i)
+                val yy = SimpleDateFormat("yyyy", Locale.getDefault()).format(date)
+                val mm = SimpleDateFormat("MM", Locale.getDefault()).format(date)
+                val dd = SimpleDateFormat("dd", Locale.getDefault()).format(date)
+                Log.d("LOGTAG/COGDATA", " $yy $mm $dd")
+                dates.add(CalendarDay.from(yy.toInt(),  mm.toInt()-1, dd.toInt())) // year, month, date
             }
             var payerString = "입금자명: "
             for (i in callPayName){
@@ -121,12 +140,13 @@ class CallingService: Service() {
             nameView.text = callName
             numberView.text = callNumber
             moneyView.text = "대출금액: $callLoanMoney"
-            payView.text = "$callPayCount 번($callPay 원)"
+            payView.text = "납임횟수: $callPayCount 번($callPay 원)"
             unpaidView.text = "미납: ${callLoanMoney.toInt() - callPay.toInt()}"
             loanCountView.text = "대출횟수: $callLoanCount 번"
             firstLoanDateView.text = "첫대출: ${callDate[0]}"
             loanDateView.text = dateString
             payerView.text = payerString
+            calendarView.addDecorators(EventDecorator(Color.RED, dates))
         }
 
         return START_REDELIVER_INTENT

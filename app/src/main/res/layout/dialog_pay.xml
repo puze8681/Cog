@@ -33,7 +33,6 @@
     <EditText
         android:id="@+id/edit_name_dialog_pay"
         android:hint="납입자 명을 입력해주세요."
-        android:inputType="number"
         android:textColorHint="#808080"
         android:layout_marginRight="24dp"
         android:layout_marginLeft="24dp"

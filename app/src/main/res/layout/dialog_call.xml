@@ -12,30 +12,30 @@
     <TextView
         android:id="@+id/text_name_dialog_call"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="32dp"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="8dp"
-        android:gravity="center|left"
+        android:gravity="center"
         android:text="홍길동"
         android:textColor="#000000"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
     <TextView
         android:id="@+id/text_number_dialog_call"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="32dp"
         android:layout_alignParentLeft="true"
         android:layout_marginBottom="8dp"
-        android:gravity="center|left"
+        android:gravity="center"
         android:text="010-1234-1234"
         android:textColor="#000000"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:orientation="horizontal"
         android:weightSum="2">
 
@@ -46,7 +46,7 @@
             android:layout_weight="1"
             android:text="대출금액: 2000000원"
             android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/text_pay_dialog_call"
@@ -55,12 +55,12 @@
             android:layout_weight="1"
             android:text="납입횟수: 99번(150000원)"
             android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:orientation="horizontal"
         android:weightSum="2">
 
@@ -71,7 +71,7 @@
             android:layout_weight="1"
             android:text="미납: 2000000원"
             android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
 
         <TextView
             android:id="@+id/text_loan_count_dialog_call"
@@ -80,46 +80,38 @@
             android:layout_weight="1"
             android:text="대출횟수: 99번(150000원)"
             android:textColor="#000000"
-            android:textSize="14sp" />
+            android:textSize="18sp" />
     </LinearLayout>
 
     <TextView
         android:id="@+id/text_first_loan_date_dialog_call"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:text="첫대출: 2020.01.01"
         android:textColor="#000000"
-        android:textSize="14sp" />
+        android:textSize="18sp" />
 
     <TextView
         android:id="@+id/text_loan_date_dialog_call"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:text="대출: 2020.01.01\n2020.02.02"
+        android:layout_height="28dp"
+        android:text="대출: 2020.01.01, 2020.02.02"
         android:textColor="#000000"
-        android:textSize="14sp" />
+        android:textSize="18sp" />
 
-    <CalendarView
+    <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/calendar_dialog_call"
-        android:background="#273149"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:focusedMonthDateColor="#EC5656"
-        android:contextClickable="false"
-        android:maxDate="12/31/2023"
-        android:minDate="01/01/2020"
-        android:selectedWeekBackgroundColor="#ffff00"
-        android:showWeekNumber="false"
-        android:unfocusedMonthDateColor="#0000ff"
-        android:weekSeparatorLineColor="#00ff00" />
+        android:layout_height="240dp"
+        app:mcv_showOtherDates="all"
+        app:mcv_selectionColor="#00F" />
 
     <TextView
         android:id="@+id/text_payer_dialog_call"
-        android:layout_marginTop="8dp"
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="28dp"
         android:text="입금자명 :"
         android:textColor="#000000"
-        android:textSize="14sp" />
+        android:textSize="18sp" />
 </LinearLayout>
