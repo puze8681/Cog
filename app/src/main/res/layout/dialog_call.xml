@@ -104,6 +104,7 @@
         android:id="@+id/calendar_dialog_call"
         android:layout_width="match_parent"
         android:layout_height="240dp"
+        app:mcv_tileWidth="44dp"
         app:mcv_showOtherDates="all"
         app:mcv_selectionColor="#00F" />
 
